@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function ImageGallery({
   images,
@@ -12,11 +12,11 @@ export function ImageGallery({
   onRemove?: (index: number) => Promise<void>;
 }) {
   const [active, setActive] = useState(0);
-  const [adding, setAdding] = useState(false);
-  const [url, setUrl] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [broken, setBroken] = useState<Set<number>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeIndex = Math.min(active, Math.max(images.length - 1, 0));
 
@@ -32,64 +32,51 @@ export function ImageGallery({
     }
   }
 
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !onAdd) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Échec de l'envoi de la photo");
+      await onAdd(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de l'envoi de la photo");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (images.length === 0) {
     if (!onAdd) return null;
 
-    if (adding) {
-      return (
-        <div className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
-          <span className="text-sm font-medium text-slate-700">
-            URL de la photo
-          </span>
-          <div className="flex gap-2">
-            <input
-              autoFocus
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://..."
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
-            />
-            <button
-              type="button"
-              disabled={saving || !url.trim()}
-              onClick={async () => {
-                setSaving(true);
-                try {
-                  await onAdd(url.trim());
-                  setUrl("");
-                  setAdding(false);
-                } finally {
-                  setSaving(false);
-                }
-              }}
-              className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
-            >
-              {saving ? "..." : "Ajouter"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAdding(false);
-                setUrl("");
-              }}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-500 hover:bg-white"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <button
-        type="button"
-        onClick={() => setAdding(true)}
-        className="flex h-40 w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:border-slate-400 hover:text-slate-600"
-      >
-        <span className="text-3xl">📷</span>
-        <span className="text-sm font-medium">Ajouter une photo</span>
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex h-40 w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:border-slate-400 hover:text-slate-600 disabled:opacity-50"
+        >
+          <span className="text-3xl">📷</span>
+          <span className="text-sm font-medium">
+            {uploading ? "Envoi..." : "Ajouter une photo"}
+          </span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFileSelected}
+          className="hidden"
+        />
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
     );
   }
 

@@ -27,6 +27,8 @@ const BASE_SORTS = {
   status: "Statut (Vu, Planifié, RDV, Peut-être)",
   price_asc: "Prix croissant",
   price_desc: "Prix décroissant",
+  price_per_sqm_asc: "Prix/m² croissant",
+  price_per_sqm_desc: "Prix/m² décroissant",
   rating_desc: "Meilleure note (moyenne)",
   surface_desc: "Plus grande surface",
 } as const;
@@ -35,6 +37,11 @@ type BaseSortKey = keyof typeof BASE_SORTS;
 
 function personSortKey(personId: number) {
   return `person:${personId}`;
+}
+
+function pricePerSqm(a: ApartmentWithExtras): number | null {
+  if (!a.price || !a.surface) return null;
+  return a.price / a.surface;
 }
 
 export function Dashboard({
@@ -79,6 +86,12 @@ export function Dashboard({
           break;
         case "price_desc":
           sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+          break;
+        case "price_per_sqm_asc":
+          sorted.sort((a, b) => (pricePerSqm(a) ?? Infinity) - (pricePerSqm(b) ?? Infinity));
+          break;
+        case "price_per_sqm_desc":
+          sorted.sort((a, b) => (pricePerSqm(b) ?? -Infinity) - (pricePerSqm(a) ?? -Infinity));
           break;
         case "rating_desc":
           sorted.sort(

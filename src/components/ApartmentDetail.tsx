@@ -10,6 +10,7 @@ import {
   type ApartmentFormValues,
 } from "@/components/ApartmentForm";
 import { ImageGallery } from "@/components/ImageGallery";
+import { InlineSelect, InlineText } from "@/components/InlineField";
 import { PriceHistoryList } from "@/components/PriceHistoryList";
 import { RatingEditor } from "@/components/RatingEditor";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -37,6 +38,19 @@ export function ApartmentDetail({
       throw new Error(data.error ?? "Erreur lors de la mise à jour");
     }
     setEditing(false);
+    router.refresh();
+  }
+
+  async function patchField(field: string, value: unknown) {
+    const res = await fetch(`/api/apartments/${apartment.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "Erreur lors de la mise à jour");
+    }
     router.refresh();
   }
 
@@ -135,25 +149,25 @@ export function ApartmentDetail({
             value={apartment.rooms !== null ? String(apartment.rooms) : "—"}
           />
           <Info label="Étage" value={apartment.floor ?? "—"} />
-          <Info
+          <InlineSelect
             label="Ascenseur"
-            value={
-              apartment.hasElevator === null
-                ? "Inconnu"
-                : apartment.hasElevator
-                ? "Oui"
-                : "Non"
-            }
+            value={apartment.hasElevator === null ? "nc" : apartment.hasElevator ? "yes" : "no"}
+            options={[
+              { value: "yes", label: "Oui" },
+              { value: "no", label: "Non" },
+              { value: "nc", label: "NC" },
+            ]}
+            onSave={(v) => patchField("hasElevator", v === "nc" ? null : v === "yes")}
           />
-          <Info
+          <InlineSelect
             label="Cave"
-            value={
-              apartment.hasCellar === null
-                ? "Inconnue"
-                : apartment.hasCellar
-                ? "Oui"
-                : "Non"
-            }
+            value={apartment.hasCellar === null ? "nc" : apartment.hasCellar ? "yes" : "no"}
+            options={[
+              { value: "yes", label: "Cave" },
+              { value: "nc", label: "NC" },
+              { value: "no", label: "Non" },
+            ]}
+            onSave={(v) => patchField("hasCellar", v === "nc" ? null : v === "yes")}
           />
           <Info label="Arrondissement" value={apartment.arrondissement ?? "—"} />
           <Info label="Quartier" value={apartment.neighborhood ?? "—"} />
@@ -162,7 +176,12 @@ export function ApartmentDetail({
             value={formatDate(apartment.listingUpdatedAt)}
           />
           <Info label="Date de visite" value={formatDate(apartment.visitDate)} />
-          <Info label="Contact" value={apartment.contactPhone ?? "—"} />
+          <InlineText
+            label="Contact"
+            value={apartment.contactPhone ?? ""}
+            placeholder="Téléphone, email..."
+            onSave={(v) => patchField("contactPhone", v.trim() || null)}
+          />
           <Info label="Ajouté le" value={formatDate(apartment.createdAt)} />
         </div>
       </div>

@@ -231,7 +231,7 @@ export function getImages(apartmentId: string): string[] {
       "SELECT url FROM apartment_images WHERE apartment_id = ? ORDER BY position ASC"
     )
     .all(apartmentId) as { url: string }[];
-  return rows.map((r) => r.url);
+  return rows.map((r) => r.url).filter((url) => url.trim() !== "");
 }
 
 export function setImages(apartmentId: string, urls: string[]): void {

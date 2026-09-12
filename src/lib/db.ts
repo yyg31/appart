@@ -91,9 +91,14 @@ function createConnection() {
   db.exec(`
     INSERT INTO apartment_images (apartment_id, url, position)
     SELECT id, image_url, 0 FROM apartments
-    WHERE image_url IS NOT NULL
+    WHERE image_url IS NOT NULL AND TRIM(image_url) != ''
     AND id NOT IN (SELECT apartment_id FROM apartment_images)
   `);
+
+  // Defensive cleanup: a blank url (from the backfill above, before this
+  // filter existed, or from any other source) makes an apartment look like
+  // it has a photo when it doesn't, hiding the "add a photo" placeholder.
+  db.exec(`DELETE FROM apartment_images WHERE TRIM(url) = ''`);
 
   return db;
 }

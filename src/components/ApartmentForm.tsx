@@ -229,60 +229,50 @@ export function ApartmentForm({
         />
       </Field>
 
-      <Field label="Photos (URL)">
-        <div className="flex flex-col gap-2">
-          {values.images.map((url, index) => (
-            <div key={index} className="flex gap-2">
-              <input
-                className={`${inputClass} flex-1`}
-                value={url}
-                onChange={(e) =>
-                  update(
-                    "images",
-                    values.images.map((v, i) => (i === index ? e.target.value : v))
-                  )
-                }
-                placeholder="https://..."
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  update(
-                    "images",
-                    values.images.filter((_, i) => i !== index)
-                  )
-                }
-                className="shrink-0 rounded-lg border border-slate-300 px-2.5 text-sm text-slate-500 hover:bg-slate-50"
-                aria-label="Retirer cette photo"
-              >
-                ✕
-              </button>
+      <Field label="Photos">
+        <div className="flex flex-col gap-3">
+          {values.images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {values.images.map((url, index) => (
+                <div key={index} className="group relative h-20 w-20 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-full w-full rounded-lg border border-slate-200 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      update(
+                        "images",
+                        values.images.filter((_, i) => i !== index)
+                      )
+                    }
+                    aria-label="Retirer cette photo"
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-xs text-white shadow"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => update("images", [...values.images, ""])}
-              className="text-sm font-medium text-slate-600 underline"
-            >
-              + Ajouter une photo (URL)
-            </button>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
-            >
-              {uploading ? "Envoi..." : "📷 Choisir une photo"}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleFileSelected}
-              className="hidden"
-            />
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="self-start rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+          >
+            {uploading ? "Envoi..." : "📷 Choisir une photo"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileSelected}
+            className="hidden"
+          />
         </div>
       </Field>
 

@@ -48,7 +48,22 @@ pm2 save
 pm2 startup systemd -u "$USER" --hp "$HOME" | tail -1 | bash
 
 echo "==> Configuration de Caddy (HTTPS via nip.io + mot de passe partagé)"
-IP=$(curl -s ifconfig.me)
+detect_ip() {
+  for url in "https://ifconfig.me" "https://icanhazip.com" "https://api.ipify.org" "https://ipinfo.io/ip"; do
+    ip=$(curl -4 -fsS --max-time 5 --retry 2 "$url" 2>/dev/null | tr -d '[:space:]') || true
+    if [[ "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+      echo "$ip"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if ! IP=$(detect_ip); then
+  echo "Impossible de détecter automatiquement l'IP publique (réseau indisponible ?)." >&2
+  echo "Relancez ce script, ou configurez Caddy manuellement avec votre IP." >&2
+  exit 1
+fi
 CADDYFILE_HOST="${IP}.nip.io"
 
 if [ -f /etc/caddy/Caddyfile ] && grep -q "nip.io" /etc/caddy/Caddyfile 2>/dev/null; then

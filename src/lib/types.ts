@@ -1,14 +1,13 @@
-// Kept only for the underlying DB column (unused by the UI); the app no
-// longer surfaces a "status" concept anywhere.
-export type ApartmentStatus =
-  | "nouveau"
-  | "a_contacter"
-  | "contacte"
-  | "visite_prevue"
-  | "visite"
-  | "coup_de_coeur"
-  | "rejete"
-  | "plus_disponible";
+export type ApartmentStatus = "peut_etre" | "planifie" | "rdv" | "vu";
+
+export const STATUS_LABELS: Record<ApartmentStatus, string> = {
+  vu: "Vu",
+  planifie: "Planifié",
+  rdv: "RDV",
+  peut_etre: "Peut-être",
+};
+
+export const STATUS_ORDER: ApartmentStatus[] = ["vu", "planifie", "rdv", "peut_etre"];
 
 export interface Person {
   id: number;

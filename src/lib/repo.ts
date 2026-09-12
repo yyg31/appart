@@ -171,7 +171,7 @@ export function createApartment(input: ApartmentInput): Apartment {
     contactPhone: input.contactPhone ?? null,
     visitDate: input.visitDate ?? null,
     notes: input.notes ?? "",
-    status: input.status ?? "nouveau",
+    status: input.status ?? "peut_etre",
     listingUpdatedAt: input.listingUpdatedAt ?? null,
     createdAt: now,
     updatedAt: now,

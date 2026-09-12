@@ -40,6 +40,12 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="font-semibold leading-snug line-clamp-2 group-hover:underline">
           {apartment.title}
+          {apartment.status === "vu" && (
+            <span className="ml-1.5 font-bold text-green-600">VU</span>
+          )}
+          {apartment.status === "planifie" && (
+            <span className="ml-1.5 font-bold text-orange-500">P</span>
+          )}
         </h3>
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-bold">{formatPrice(apartment.price)}</span>

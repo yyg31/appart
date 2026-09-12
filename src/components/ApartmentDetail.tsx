@@ -92,30 +92,28 @@ export function ApartmentDetail({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            {apartment.sourceSite && (
-              <div className="mb-1 text-xs text-slate-400">{apartment.sourceSite}</div>
-            )}
-            <h1 className="text-2xl font-bold leading-tight">{apartment.title}</h1>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
-            >
-              Modifier
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              Supprimer
-            </button>
-          </div>
+        <div>
+          {apartment.sourceSite && (
+            <div className="mb-1 text-xs text-slate-400">{apartment.sourceSite}</div>
+          )}
+          <h1 className="text-2xl font-bold leading-tight">{apartment.title}</h1>
+        </div>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+          >
+            Modifier
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Supprimer
+          </button>
         </div>
 
         <ImageGallery

@@ -31,6 +31,37 @@ function parseRoomsFromText(text: string): number | null {
   return null;
 }
 
+function findImagesInJsonLd(json: unknown): string[] {
+  const found: string[] = [];
+  const visit = (node: unknown) => {
+    if (node === null || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    const obj = node as Record<string, unknown>;
+    if (obj.image !== undefined) {
+      const value = obj.image;
+      if (typeof value === "string") found.push(value);
+      else if (Array.isArray(value)) {
+        for (const item of value) {
+          if (typeof item === "string") found.push(item);
+          else if (item && typeof item === "object" && typeof (item as Record<string, unknown>).url === "string") {
+            found.push((item as Record<string, unknown>).url as string);
+          }
+        }
+      } else if (value && typeof value === "object" && typeof (value as Record<string, unknown>).url === "string") {
+        found.push((value as Record<string, unknown>).url as string);
+      }
+    }
+    for (const value of Object.values(obj)) {
+      if (value && typeof value === "object") visit(value);
+    }
+  };
+  visit(json);
+  return found;
+}
+
 function findInJsonLd(json: unknown, keys: string[]): unknown {
   if (json === null || typeof json !== "object") return undefined;
   if (Array.isArray(json)) {
@@ -83,7 +114,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
         sourceSite: hostname,
         title: null,
         description: null,
-        imageUrl: null,
+        images: [],
         price: null,
         surface: null,
         rooms: null,
@@ -97,7 +128,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
       sourceSite: hostname,
       title: null,
       description: null,
-      imageUrl: null,
+      images: [],
       price: null,
       surface: null,
       rooms: null,
@@ -126,21 +157,22 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     metaContent('meta[name="description"]') ||
     null;
 
-  const imageUrl =
-    metaContent('meta[property="og:image"]') ||
-    metaContent('meta[name="twitter:image"]') ||
-    null;
+  const metaImages = $('meta[property="og:image"], meta[name="twitter:image"]')
+    .map((_, el) => $(el).attr("content")?.trim())
+    .get()
+    .filter((v): v is string => Boolean(v));
 
   const siteName = metaContent('meta[property="og:site_name"]') || hostname;
 
   let price: number | null = null;
   let surface: number | null = null;
   let rooms: number | null = null;
+  const jsonLdImages: string[] = [];
 
   $('script[type="application/ld+json"]').each((_, el) => {
-    if (price !== null && surface !== null && rooms !== null) return;
     try {
       const json = JSON.parse($(el).contents().text());
+      jsonLdImages.push(...findImagesInJsonLd(json));
       if (price === null) {
         const rawPrice = findInJsonLd(json, ["price", "lowPrice"]);
         if (rawPrice !== undefined) {
@@ -182,14 +214,16 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
   if (surface === null) surface = parseSurfaceFromText(fallbackText);
   if (rooms === null) rooms = parseRoomsFromText(fallbackText);
 
-  const foundSomething = title || description || price || surface || rooms;
+  const images = Array.from(new Set([...metaImages, ...jsonLdImages])).slice(0, 20);
+
+  const foundSomething = title || description || price || surface || rooms || images.length;
 
   return {
     url,
     sourceSite: siteName,
     title,
     description,
-    imageUrl,
+    images,
     price,
     surface,
     rooms,

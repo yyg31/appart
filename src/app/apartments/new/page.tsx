@@ -42,7 +42,7 @@ export default function NewApartmentPage() {
         sourceSite: data.sourceSite ?? "",
         title: data.title ?? "",
         description: data.description ?? "",
-        imageUrl: data.imageUrl ?? "",
+        images: data.images ?? [],
         price: data.price?.toString() ?? "",
         surface: data.surface?.toString() ?? "",
         rooms: data.rooms?.toString() ?? "",

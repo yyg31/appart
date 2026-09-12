@@ -63,6 +63,15 @@ function createConnection() {
       updated_at TEXT NOT NULL,
       PRIMARY KEY (apartment_id, person_id)
     );
+
+    CREATE TABLE IF NOT EXISTS apartment_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      apartment_id TEXT NOT NULL REFERENCES apartments(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      position INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_apartment_images_apartment
+      ON apartment_images(apartment_id, position);
   `);
 
   const personCount = db
@@ -74,6 +83,17 @@ function createConnection() {
     insert.run("Personne 1");
     insert.run("Personne 2");
   }
+
+  // One-time backfill: apartments that predate the gallery table had a
+  // single `image_url` column. Copy it in as the cover photo so existing
+  // data still shows an image, then apartment_images becomes the only
+  // source of truth going forward.
+  db.exec(`
+    INSERT INTO apartment_images (apartment_id, url, position)
+    SELECT id, image_url, 0 FROM apartments
+    WHERE image_url IS NOT NULL
+    AND id NOT IN (SELECT apartment_id FROM apartment_images)
+  `);
 
   return db;
 }

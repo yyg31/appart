@@ -119,7 +119,7 @@ export interface ApartmentInput {
   sourceSite?: string | null;
   title: string;
   description?: string | null;
-  imageUrl?: string | null;
+  images?: string[];
   price?: number | null;
   surface?: number | null;
   rooms?: number | null;
@@ -159,7 +159,7 @@ export function createApartment(input: ApartmentInput): Apartment {
     sourceSite: input.sourceSite ?? null,
     title: input.title,
     description: input.description ?? null,
-    imageUrl: input.imageUrl ?? null,
+    imageUrl: null,
     price: input.price ?? null,
     surface: input.surface ?? null,
     rooms: input.rooms ?? null,
@@ -181,6 +181,10 @@ export function createApartment(input: ApartmentInput): Apartment {
     db.prepare(
       "INSERT INTO price_history (apartment_id, price, recorded_at) VALUES (?, ?, ?)"
     ).run(id, input.price, now);
+  }
+
+  if (input.images) {
+    setImages(id, input.images);
   }
 
   return getApartment(id)!;
@@ -220,38 +224,64 @@ export function getRatings(apartmentId: string): Rating[] {
   return rows.map(toRating);
 }
 
+export function getImages(apartmentId: string): string[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      "SELECT url FROM apartment_images WHERE apartment_id = ? ORDER BY position ASC"
+    )
+    .all(apartmentId) as { url: string }[];
+  return rows.map((r) => r.url);
+}
+
+export function setImages(apartmentId: string, urls: string[]): void {
+  const db = getDb();
+  const clean = urls.map((u) => u.trim()).filter(Boolean);
+  const replace = db.transaction(() => {
+    db.prepare("DELETE FROM apartment_images WHERE apartment_id = ?").run(
+      apartmentId
+    );
+    const insert = db.prepare(
+      "INSERT INTO apartment_images (apartment_id, url, position) VALUES (?, ?, ?)"
+    );
+    clean.forEach((url, position) => insert.run(apartmentId, url, position));
+  });
+  replace();
+}
+
 export function getApartmentWithExtras(id: string): ApartmentWithExtras | null {
   const apartment = getApartment(id);
   if (!apartment) return null;
   const ratings = getRatings(id);
   const priceHistory = getPriceHistory(id);
+  const images = getImages(id);
   const averageScore =
     ratings.length > 0
       ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
       : null;
-  return { ...apartment, ratings, priceHistory, averageScore };
+  return { ...apartment, ratings, priceHistory, averageScore, images };
 }
 
 export function listApartmentsWithExtras(): ApartmentWithExtras[] {
   return listApartments().map((apartment) => {
     const ratings = getRatings(apartment.id);
     const priceHistory = getPriceHistory(apartment.id);
+    const images = getImages(apartment.id);
     const averageScore =
       ratings.length > 0
         ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
         : null;
-    return { ...apartment, ratings, priceHistory, averageScore };
+    return { ...apartment, ratings, priceHistory, averageScore, images };
   });
 }
 
 export type ApartmentPatch = Partial<ApartmentInput>;
 
-const PATCHABLE_FIELDS: Record<keyof ApartmentPatch, string> = {
+const PATCHABLE_FIELDS: Partial<Record<keyof ApartmentPatch, string>> = {
   url: "url",
   sourceSite: "source_site",
   title: "title",
   description: "description",
-  imageUrl: "image_url",
   price: "price",
   surface: "surface",
   rooms: "rooms",
@@ -288,6 +318,10 @@ export function updateApartment(
     }
     columns.push(`${column} = ?`);
     values.push(value ?? null);
+  }
+
+  if (patch.images !== undefined) {
+    setImages(id, patch.images);
   }
 
   if (columns.length === 0) return existing;

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { listApartmentsWithExtras } from "@/lib/repo";
+import { listApartmentsWithExtras, listPersons } from "@/lib/repo";
 import { Dashboard } from "@/components/Dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   const apartments = listApartmentsWithExtras();
+  const persons = listPersons();
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,7 +34,7 @@ export default function HomePage() {
           .
         </div>
       ) : (
-        <Dashboard apartments={apartments} />
+        <Dashboard apartments={apartments} persons={persons} />
       )}
     </div>
   );

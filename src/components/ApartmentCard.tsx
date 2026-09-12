@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ApartmentWithExtras } from "@/lib/types";
 import { formatDate, formatPrice, formatSurface, pricePerSquareMeter } from "@/lib/format";
-import { StatusBadge } from "./StatusBadge";
 
 export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras }) {
   const priceHasChanged =
@@ -27,9 +26,6 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
             🏢
           </div>
         )}
-        <div className="absolute top-2 left-2">
-          <StatusBadge status={apartment.status} />
-        </div>
         {apartment.averageScore !== null && (
           <div className="absolute top-2 right-2 rounded-full bg-white/95 px-2 py-0.5 text-xs font-semibold shadow">
             ⭐ {apartment.averageScore.toFixed(1)}/10

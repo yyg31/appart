@@ -1,30 +1,50 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ApartmentStatus, ApartmentWithExtras } from "@/lib/types";
-import { STATUS_LABELS, STATUS_ORDER } from "@/lib/types";
+import type { ApartmentWithExtras, Person } from "@/lib/types";
 import { ApartmentCard } from "./ApartmentCard";
 
-type SortKey =
-  | "recent"
-  | "price_asc"
-  | "price_desc"
-  | "rating_desc"
-  | "surface_desc";
+type PriceRange = "all" | "under_800" | "800_900" | "over_900";
 
-const SORT_LABELS: Record<SortKey, string> = {
+const PRICE_RANGE_LABELS: Record<PriceRange, string> = {
+  all: "Tous les prix",
+  under_800: "Moins de 800 000 €",
+  "800_900": "800 000 à 900 000 €",
+  over_900: "900 000 € ou plus",
+};
+
+function matchesPriceRange(price: number | null, range: PriceRange): boolean {
+  if (range === "all") return true;
+  if (price === null) return false;
+  if (range === "under_800") return price < 800_000;
+  if (range === "800_900") return price >= 800_000 && price <= 900_000;
+  return price > 900_000;
+}
+
+const BASE_SORTS = {
   recent: "Plus récent",
   price_asc: "Prix croissant",
   price_desc: "Prix décroissant",
-  rating_desc: "Meilleure note",
+  rating_desc: "Meilleure note (moyenne)",
   surface_desc: "Plus grande surface",
-};
+} as const;
 
-export function Dashboard({ apartments }: { apartments: ApartmentWithExtras[] }) {
-  const [statusFilter, setStatusFilter] = useState<ApartmentStatus | "all">("all");
+type BaseSortKey = keyof typeof BASE_SORTS;
+
+function personSortKey(personId: number) {
+  return `person:${personId}`;
+}
+
+export function Dashboard({
+  apartments,
+  persons,
+}: {
+  apartments: ApartmentWithExtras[];
+  persons: Person[];
+}) {
   const [arrondissementFilter, setArrondissementFilter] = useState("all");
-  const [sort, setSort] = useState<SortKey>("recent");
-  const [hideRejected, setHideRejected] = useState(true);
+  const [priceRange, setPriceRange] = useState<PriceRange>("all");
+  const [sort, setSort] = useState<string>("recent");
 
   const arrondissements = useMemo(() => {
     const values = new Set<string>();
@@ -36,58 +56,48 @@ export function Dashboard({ apartments }: { apartments: ApartmentWithExtras[] })
 
   const filtered = useMemo(() => {
     let result = apartments;
-    if (hideRejected) {
-      result = result.filter(
-        (a) => a.status !== "rejete" && a.status !== "plus_disponible"
-      );
-    }
-    if (statusFilter !== "all") {
-      result = result.filter((a) => a.status === statusFilter);
-    }
     if (arrondissementFilter !== "all") {
       result = result.filter((a) => a.arrondissement === arrondissementFilter);
     }
+    if (priceRange !== "all") {
+      result = result.filter((a) => matchesPriceRange(a.price, priceRange));
+    }
 
     const sorted = [...result];
-    switch (sort) {
-      case "price_asc":
-        sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-        break;
-      case "price_desc":
-        sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
-        break;
-      case "rating_desc":
-        sorted.sort(
-          (a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity)
-        );
-        break;
-      case "surface_desc":
-        sorted.sort((a, b) => (b.surface ?? -Infinity) - (a.surface ?? -Infinity));
-        break;
-      default:
-        sorted.sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
+    const personMatch = sort.match(/^person:(\d+)$/);
+    if (personMatch) {
+      const personId = Number(personMatch[1]);
+      const scoreFor = (a: ApartmentWithExtras) =>
+        a.ratings.find((r) => r.personId === personId)?.score ?? -Infinity;
+      sorted.sort((a, b) => scoreFor(b) - scoreFor(a));
+    } else {
+      switch (sort as BaseSortKey) {
+        case "price_asc":
+          sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+          break;
+        case "price_desc":
+          sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+          break;
+        case "rating_desc":
+          sorted.sort(
+            (a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity)
+          );
+          break;
+        case "surface_desc":
+          sorted.sort((a, b) => (b.surface ?? -Infinity) - (a.surface ?? -Infinity));
+          break;
+        default:
+          sorted.sort(
+            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+      }
     }
     return sorted;
-  }, [apartments, statusFilter, arrondissementFilter, sort, hideRejected]);
+  }, [apartments, arrondissementFilter, priceRange, sort]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as ApartmentStatus | "all")}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm"
-        >
-          <option value="all">Tous les statuts</option>
-          {STATUS_ORDER.map((status) => (
-            <option key={status} value={status}>
-              {STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
-
         {arrondissements.length > 0 && (
           <select
             value={arrondissementFilter}
@@ -104,25 +114,33 @@ export function Dashboard({ apartments }: { apartments: ApartmentWithExtras[] })
         )}
 
         <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
+          value={priceRange}
+          onChange={(e) => setPriceRange(e.target.value as PriceRange)}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm"
         >
-          {Object.entries(SORT_LABELS).map(([key, label]) => (
+          {Object.entries(PRICE_RANGE_LABELS).map(([key, label]) => (
             <option key={key} value={key}>
               {label}
             </option>
           ))}
         </select>
 
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={hideRejected}
-            onChange={(e) => setHideRejected(e.target.checked)}
-          />
-          Masquer rejetés / plus disponibles
-        </label>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm"
+        >
+          {Object.entries(BASE_SORTS).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+          {persons.map((person) => (
+            <option key={person.id} value={personSortKey(person.id)}>
+              Meilleure note {person.name}
+            </option>
+          ))}
+        </select>
 
         <span className="ml-auto text-sm text-slate-500">
           {filtered.length} annonce{filtered.length > 1 ? "s" : ""}

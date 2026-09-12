@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ApartmentWithExtras, Person } from "@/lib/types";
 import { STATUS_ORDER } from "@/lib/types";
 import { ApartmentCard } from "./ApartmentCard";
@@ -51,9 +52,27 @@ export function Dashboard({
   apartments: ApartmentWithExtras[];
   persons: Person[];
 }) {
-  const [arrondissementFilter, setArrondissementFilter] = useState("all");
-  const [priceRange, setPriceRange] = useState<PriceRange>("all");
-  const [sort, setSort] = useState<string>("recent");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [arrondissementFilter, setArrondissementFilter] = useState(
+    () => searchParams.get("arr") ?? "all"
+  );
+  const [priceRange, setPriceRange] = useState<PriceRange>(
+    () => (searchParams.get("prix") as PriceRange | null) ?? "all"
+  );
+  const [sort, setSort] = useState<string>(() => searchParams.get("tri") ?? "recent");
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (arrondissementFilter !== "all") params.set("arr", arrondissementFilter);
+    if (priceRange !== "all") params.set("prix", priceRange);
+    if (sort !== "recent") params.set("tri", sort);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arrondissementFilter, priceRange, sort]);
 
   const arrondissements = useMemo(() => {
     const values = new Set<string>();

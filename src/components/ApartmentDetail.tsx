@@ -26,6 +26,7 @@ export function ApartmentDetail({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function handleUpdate(values: ApartmentFormValues) {
     const res = await fetch(`/api/apartments/${apartment.id}`, {
@@ -55,7 +56,6 @@ export function ApartmentDetail({
   }
 
   async function handleDelete() {
-    if (!confirm("Supprimer définitivement cette annonce ?")) return;
     setDeleting(true);
     try {
       await fetch(`/api/apartments/${apartment.id}`, { method: "DELETE" });
@@ -107,14 +107,35 @@ export function ApartmentDetail({
           >
             Modifier
           </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-          >
-            Supprimer
-          </button>
+          {confirmingDelete ? (
+            <>
+              <span className="self-center text-sm text-slate-500">Supprimer ?</span>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "..." : "Oui, supprimer"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              Supprimer
+            </button>
+          )}
         </div>
 
         <ImageGallery

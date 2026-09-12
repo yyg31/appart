@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export interface ApartmentFormValues {
   title: string;
@@ -144,12 +144,34 @@ export function ApartmentForm({
   const [values, setValues] = useState(initialValues);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof ApartmentFormValues>(
     key: K,
     value: ApartmentFormValues[K]
   ) {
     setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Échec de l'envoi de la photo");
+      update("images", [...values.images, data.url]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de l'envoi de la photo");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -237,13 +259,30 @@ export function ApartmentForm({
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={() => update("images", [...values.images, ""])}
-            className="self-start text-sm font-medium text-slate-600 underline"
-          >
-            + Ajouter une photo
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => update("images", [...values.images, ""])}
+              className="text-sm font-medium text-slate-600 underline"
+            >
+              + Ajouter une photo (URL)
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+            >
+              {uploading ? "Envoi..." : "📷 Choisir une photo"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleFileSelected}
+              className="hidden"
+            />
+          </div>
         </div>
       </Field>
 

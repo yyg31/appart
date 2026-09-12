@@ -193,7 +193,7 @@ export function Dashboard({
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((apartment) => (
-            <ApartmentCard key={apartment.id} apartment={apartment} />
+            <ApartmentCard key={apartment.id} apartment={apartment} persons={persons} />
           ))}
         </div>
       )}

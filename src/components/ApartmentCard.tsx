@@ -57,6 +57,11 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
         </h3>
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-bold">{formatPrice(apartment.price)}</span>
+          {apartment.price !== null && apartment.surface !== null && (
+            <span className="font-mono text-xs text-slate-400">
+              {pricePerSquareMeter(apartment.price, apartment.surface)}
+            </span>
+          )}
           {priceHasChanged && (
             <span className="text-xs text-orange-600 font-medium">prix modifié</span>
           )}
@@ -65,7 +70,6 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
           <span>{formatSurface(apartment.surface)}</span>
           {apartment.rooms !== null && <span>{apartment.rooms} pièces</span>}
           {apartment.floor && <span>étage {apartment.floor}</span>}
-          <span>{pricePerSquareMeter(apartment.price, apartment.surface)}</span>
         </div>
         {(apartment.arrondissement || apartment.neighborhood) && (
           <div className="text-sm text-slate-500">

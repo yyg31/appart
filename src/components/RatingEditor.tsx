@@ -21,7 +21,10 @@ export function RatingEditor({
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
-    if (score < 1) return;
+    if (score < 1) {
+      await handleReset();
+      return;
+    }
     setSaving(true);
     try {
       await fetch(`/api/apartments/${apartmentId}/ratings`, {
@@ -29,6 +32,22 @@ export function RatingEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ personId: person.id, score, comment: comment || null }),
       });
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReset() {
+    setSaving(true);
+    try {
+      await fetch(`/api/apartments/${apartmentId}/ratings`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personId: person.id }),
+      });
+      setScore(0);
+      setComment("");
       onSaved();
     } finally {
       setSaving(false);
@@ -46,7 +65,7 @@ export function RatingEditor({
           <button
             key={n}
             type="button"
-            onClick={() => setScore(n)}
+            onClick={() => setScore(n === score ? 0 : n)}
             aria-label={`Noter ${n} sur 10`}
             className={`text-2xl leading-none ${
               n <= score ? "text-amber-400" : "text-slate-300 hover:text-amber-200"
@@ -63,14 +82,32 @@ export function RatingEditor({
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving || score < 1}
-        className="self-start rounded-lg bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
-      >
-        {saving ? "..." : rating ? "Mettre à jour la note" : "Enregistrer la note"}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || (score < 1 && !rating)}
+          className="rounded-lg bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+        >
+          {saving
+            ? "..."
+            : score < 1
+            ? "Remettre à 0"
+            : rating
+            ? "Mettre à jour la note"
+            : "Enregistrer la note"}
+        </button>
+        {rating && score > 0 && (
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={saving}
+            className="text-xs font-medium text-slate-500 underline disabled:opacity-50"
+          >
+            Remettre à 0
+          </button>
+        )}
+      </div>
     </div>
   );
 }

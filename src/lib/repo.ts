@@ -375,3 +375,10 @@ export function upsertRating(
     updatedAt: now,
   };
 }
+
+export function deleteRating(apartmentId: string, personId: number): void {
+  const db = getDb();
+  db.prepare(
+    "DELETE FROM ratings WHERE apartment_id = ? AND person_id = ?"
+  ).run(apartmentId, personId);
+}

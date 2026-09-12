@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { ApartmentWithExtras } from "@/lib/types";
+import type { ApartmentWithExtras, Person } from "@/lib/types";
 import { formatDate, formatPrice, formatSurface, pricePerSquareMeter } from "@/lib/format";
+import { personBadgeStyle } from "@/lib/personColors";
 
-export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras }) {
+export function ApartmentCard({
+  apartment,
+  persons,
+}: {
+  apartment: ApartmentWithExtras;
+  persons: Person[];
+}) {
   const [coverBroken, setCoverBroken] = useState(false);
   const priceHasChanged =
     apartment.priceHistory.length > 1 &&
@@ -31,9 +38,20 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
             🏢
           </div>
         )}
-        {apartment.averageScore !== null && (
-          <div className="absolute top-2 right-2 rounded-full bg-white/95 px-2 py-0.5 text-xs font-semibold shadow">
-            ⭐ {apartment.averageScore.toFixed(1)}/10
+        {persons.length > 0 && (
+          <div className="absolute top-2 right-2 flex gap-1">
+            {persons.map((person, index) => {
+              const rating = apartment.ratings.find((r) => r.personId === person.id);
+              return (
+                <span
+                  key={person.id}
+                  title={person.name}
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold shadow ${personBadgeStyle(index)}`}
+                >
+                  {person.name.charAt(0).toUpperCase()} {rating ? rating.score : "–"}
+                </span>
+              );
+            })}
           </div>
         )}
         {apartment.images.length > 1 && (

@@ -13,7 +13,6 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { InlineSelect, InlineText } from "@/components/InlineField";
 import { PriceHistoryList } from "@/components/PriceHistoryList";
 import { RatingEditor } from "@/components/RatingEditor";
-import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate, formatPrice, formatSurface } from "@/lib/format";
 
 export function ApartmentDetail({
@@ -95,12 +94,9 @@ export function ApartmentDetail({
       <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="mb-1 flex items-center gap-2">
-              <StatusBadge status={apartment.status} />
-              {apartment.sourceSite && (
-                <span className="text-xs text-slate-400">{apartment.sourceSite}</span>
-              )}
-            </div>
+            {apartment.sourceSite && (
+              <div className="mb-1 text-xs text-slate-400">{apartment.sourceSite}</div>
+            )}
             <h1 className="text-2xl font-bold leading-tight">{apartment.title}</h1>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -122,7 +118,10 @@ export function ApartmentDetail({
           </div>
         </div>
 
-        <ImageGallery images={apartment.images} />
+        <ImageGallery
+          images={apartment.images}
+          onAdd={(url) => patchField("images", [url])}
+        />
 
         {apartment.url && (
           <a

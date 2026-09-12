@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { ApartmentStatus } from "@/lib/types";
-import { STATUS_LABELS, STATUS_ORDER } from "@/lib/types";
 
 export interface ApartmentFormValues {
   title: string;
@@ -21,7 +19,6 @@ export interface ApartmentFormValues {
   contactPhone: string;
   visitDate: string;
   listingUpdatedAt: string;
-  status: ApartmentStatus;
   notes: string;
 }
 
@@ -42,7 +39,6 @@ export const EMPTY_FORM_VALUES: ApartmentFormValues = {
   contactPhone: "",
   visitDate: "",
   listingUpdatedAt: "",
-  status: "nouveau",
   notes: "",
 };
 
@@ -69,7 +65,6 @@ export function apartmentToFormValues(apartment: {
   contactPhone: string | null;
   visitDate: string | null;
   listingUpdatedAt: string | null;
-  status: ApartmentStatus;
   notes: string;
 }): ApartmentFormValues {
   return {
@@ -89,7 +84,6 @@ export function apartmentToFormValues(apartment: {
     contactPhone: apartment.contactPhone ?? "",
     visitDate: apartment.visitDate?.slice(0, 10) ?? "",
     listingUpdatedAt: apartment.listingUpdatedAt?.slice(0, 10) ?? "",
-    status: apartment.status,
     notes: apartment.notes,
   };
 }
@@ -112,7 +106,6 @@ export function formValuesToPayload(values: ApartmentFormValues) {
     contactPhone: values.contactPhone.trim() || null,
     visitDate: values.visitDate || null,
     listingUpdatedAt: values.listingUpdatedAt || null,
-    status: values.status,
     notes: values.notes,
   };
 }
@@ -333,20 +326,7 @@ export function ApartmentForm({
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Field label="Statut">
-          <select
-            className={inputClass}
-            value={values.status}
-            onChange={(e) => update("status", e.target.value as ApartmentStatus)}
-          >
-            {STATUS_ORDER.map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-        </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Date de mise à jour de l'annonce">
           <input
             type="date"

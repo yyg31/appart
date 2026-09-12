@@ -42,7 +42,7 @@ function createConnection() {
       contact_phone TEXT,
       visit_date TEXT,
       notes TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'nouveau',
+      status TEXT NOT NULL DEFAULT 'peut_etre',
       listing_updated_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -99,6 +99,13 @@ function createConnection() {
   // filter existed, or from any other source) makes an apartment look like
   // it has a photo when it doesn't, hiding the "add a photo" placeholder.
   db.exec(`DELETE FROM apartment_images WHERE TRIM(url) = ''`);
+
+  // Normalize any status left over from an earlier, unrelated status
+  // vocabulary (or any unrecognized value) to the new default.
+  db.exec(`
+    UPDATE apartments SET status = 'peut_etre'
+    WHERE status NOT IN ('peut_etre', 'planifie', 'rdv', 'vu')
+  `);
 
   return db;
 }

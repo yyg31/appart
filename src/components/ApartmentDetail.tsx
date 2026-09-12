@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { ApartmentWithExtras, Person } from "@/lib/types";
+import type { ApartmentStatus, ApartmentWithExtras, Person } from "@/lib/types";
+import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
 import {
   ApartmentForm,
   apartmentToFormValues,
@@ -139,6 +140,12 @@ export function ApartmentDetail({
         )}
 
         <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
+          <InlineSelect
+            label="Statut"
+            value={apartment.status}
+            options={STATUS_ORDER.map((status) => ({ value: status, label: STATUS_LABELS[status] }))}
+            onSave={(v) => patchField("status", v as ApartmentStatus)}
+          />
           <Info label="Prix" value={formatPrice(apartment.price)} />
           <Info label="Surface" value={formatSurface(apartment.surface)} />
           <Info

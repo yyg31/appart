@@ -145,6 +145,7 @@ export function ApartmentForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [brokenPhotos, setBrokenPhotos] = useState<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof ApartmentFormValues>(
@@ -235,12 +236,19 @@ export function ApartmentForm({
             <div className="flex flex-wrap gap-2">
               {values.images.map((url, index) => (
                 <div key={index} className="group relative h-20 w-20 shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt=""
-                    className="h-full w-full rounded-lg border border-slate-200 object-cover"
-                  />
+                  {brokenPhotos.has(index) ? (
+                    <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-lg text-slate-300">
+                      🚫
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={url}
+                      alt=""
+                      onError={() => setBrokenPhotos((prev) => new Set(prev).add(index))}
+                      className="h-full w-full rounded-lg border border-slate-200 object-cover"
+                    />
+                  )}
                   <button
                     type="button"
                     onClick={() =>

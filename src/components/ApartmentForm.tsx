@@ -9,7 +9,7 @@ export interface ApartmentFormValues {
   url: string;
   sourceSite: string;
   description: string;
-  imageUrl: string;
+  images: string[];
   price: string;
   surface: string;
   rooms: string;
@@ -30,7 +30,7 @@ export const EMPTY_FORM_VALUES: ApartmentFormValues = {
   url: "",
   sourceSite: "",
   description: "",
-  imageUrl: "",
+  images: [],
   price: "",
   surface: "",
   rooms: "",
@@ -57,7 +57,7 @@ export function apartmentToFormValues(apartment: {
   url: string | null;
   sourceSite: string | null;
   description: string | null;
-  imageUrl: string | null;
+  images: string[];
   price: number | null;
   surface: number | null;
   rooms: number | null;
@@ -77,7 +77,7 @@ export function apartmentToFormValues(apartment: {
     url: apartment.url ?? "",
     sourceSite: apartment.sourceSite ?? "",
     description: apartment.description ?? "",
-    imageUrl: apartment.imageUrl ?? "",
+    images: apartment.images,
     price: apartment.price?.toString() ?? "",
     surface: apartment.surface?.toString() ?? "",
     rooms: apartment.rooms?.toString() ?? "",
@@ -100,7 +100,7 @@ export function formValuesToPayload(values: ApartmentFormValues) {
     url: values.url.trim() || null,
     sourceSite: values.sourceSite.trim() || null,
     description: values.description.trim() || null,
-    imageUrl: values.imageUrl.trim() || null,
+    images: values.images.map((u) => u.trim()).filter(Boolean),
     price: values.price.trim() ? Number(values.price) : null,
     surface: values.surface.trim() ? Number(values.surface) : null,
     rooms: values.rooms.trim() ? Number(values.rooms) : null,
@@ -214,12 +214,44 @@ export function ApartmentForm({
         />
       </Field>
 
-      <Field label="Image (URL)">
-        <input
-          className={inputClass}
-          value={values.imageUrl}
-          onChange={(e) => update("imageUrl", e.target.value)}
-        />
+      <Field label="Photos (URL)">
+        <div className="flex flex-col gap-2">
+          {values.images.map((url, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                className={`${inputClass} flex-1`}
+                value={url}
+                onChange={(e) =>
+                  update(
+                    "images",
+                    values.images.map((v, i) => (i === index ? e.target.value : v))
+                  )
+                }
+                placeholder="https://..."
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  update(
+                    "images",
+                    values.images.filter((_, i) => i !== index)
+                  )
+                }
+                className="shrink-0 rounded-lg border border-slate-300 px-2.5 text-sm text-slate-500 hover:bg-slate-50"
+                aria-label="Retirer cette photo"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update("images", [...values.images, ""])}
+            className="self-start text-sm font-medium text-slate-600 underline"
+          >
+            + Ajouter une photo
+          </button>
+        </div>
       </Field>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

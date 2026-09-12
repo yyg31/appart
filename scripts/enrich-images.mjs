@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One-time enrichment pass: for apartments that already have a `url` but no
-// `imageUrl`, re-scrapes the listing page via the app's own /api/scrape
-// endpoint and fills in the photo when one is found.
+// photos, re-scrapes the listing page via the app's own /api/scrape
+// endpoint and fills in every image found (og:image / twitter:image / JSON-LD).
 // Usage: node enrich-images.mjs <app_url> <user> <password>
 
 const [appUrl, user, password] = process.argv.slice(2);
@@ -16,7 +16,7 @@ const auth = "Basic " + Buffer.from(`${user}:${password}`).toString("base64");
 const headers = { "Content-Type": "application/json", Authorization: auth };
 
 const apartments = await (await fetch(`${base}/api/apartments`, { headers })).json();
-const targets = apartments.filter((a) => a.url && !a.imageUrl);
+const targets = apartments.filter((a) => a.url && (!a.images || a.images.length === 0));
 
 console.log(`${apartments.length} annonce(s) au total, ${targets.length} sans photo à traiter.`);
 
@@ -34,14 +34,14 @@ for (const [index, apartment] of targets.entries()) {
       })
     ).json();
 
-    if (scraped.imageUrl) {
+    if (scraped.images && scraped.images.length > 0) {
       await fetch(`${base}/api/apartments/${apartment.id}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ imageUrl: scraped.imageUrl }),
+        body: JSON.stringify({ images: scraped.images }),
       });
       updated++;
-      console.log(`PHOTO [${index + 1}/${targets.length}] ${label}`);
+      console.log(`PHOTO(S) [${index + 1}/${targets.length}] ${label} (${scraped.images.length})`);
     } else {
       skipped++;
       console.log(`AUCUNE [${index + 1}/${targets.length}] ${label} (site non accessible ou sans image)`);
@@ -53,4 +53,4 @@ for (const [index, apartment] of targets.entries()) {
   await new Promise((r) => setTimeout(r, 300));
 }
 
-console.log(`\nTerminé : ${updated} photo(s) ajoutée(s), ${skipped} sans résultat.`);
+console.log(`\nTerminé : ${updated} annonce(s) enrichie(s), ${skipped} sans résultat.`);

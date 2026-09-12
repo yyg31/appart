@@ -15,10 +15,10 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
       className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:border-slate-300"
     >
       <div className="relative h-40 w-full bg-slate-100">
-        {apartment.imageUrl ? (
+        {apartment.images.length > 0 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={apartment.imageUrl}
+            src={apartment.images[0]}
             alt=""
             className="h-full w-full object-cover"
           />
@@ -33,6 +33,11 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
         {apartment.averageScore !== null && (
           <div className="absolute top-2 right-2 rounded-full bg-white/95 px-2 py-0.5 text-xs font-semibold shadow">
             ⭐ {apartment.averageScore.toFixed(1)}/10
+          </div>
+        )}
+        {apartment.images.length > 1 && (
+          <div className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+            📷 {apartment.images.length}
           </div>
         )}
       </div>

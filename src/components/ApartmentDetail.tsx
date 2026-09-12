@@ -9,6 +9,7 @@ import {
   formValuesToPayload,
   type ApartmentFormValues,
 } from "@/components/ApartmentForm";
+import { ImageGallery } from "@/components/ImageGallery";
 import { PriceHistoryList } from "@/components/PriceHistoryList";
 import { RatingEditor } from "@/components/RatingEditor";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -107,14 +108,7 @@ export function ApartmentDetail({
           </div>
         </div>
 
-        {apartment.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={apartment.imageUrl}
-            alt=""
-            className="max-h-80 w-full rounded-lg object-cover"
-          />
-        )}
+        <ImageGallery images={apartment.images} />
 
         {apartment.url && (
           <a

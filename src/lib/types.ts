@@ -78,6 +78,7 @@ export interface ApartmentWithExtras extends Apartment {
   ratings: Rating[];
   priceHistory: PriceHistoryEntry[];
   averageScore: number | null;
+  images: string[];
 }
 
 export interface ScrapedListing {
@@ -85,7 +86,7 @@ export interface ScrapedListing {
   sourceSite: string | null;
   title: string | null;
   description: string | null;
-  imageUrl: string | null;
+  images: string[];
   price: number | null;
   surface: number | null;
   rooms: number | null;

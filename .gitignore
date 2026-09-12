@@ -39,6 +39,9 @@ yarn-error.log*
 /data/*.db-wal
 /data/*.db-shm
 
+# user-uploaded photos
+/data/uploads/
+
 # vercel
 .vercel
 

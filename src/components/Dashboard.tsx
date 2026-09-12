@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ApartmentWithExtras, Person } from "@/lib/types";
+import { STATUS_ORDER } from "@/lib/types";
 import { ApartmentCard } from "./ApartmentCard";
 
 type PriceRange = "all" | "under_800" | "800_900" | "over_900";
@@ -23,6 +24,7 @@ function matchesPriceRange(price: number | null, range: PriceRange): boolean {
 
 const BASE_SORTS = {
   recent: "Plus récent",
+  status: "Statut (Vu, Planifié, RDV, Peut-être)",
   price_asc: "Prix croissant",
   price_desc: "Prix décroissant",
   rating_desc: "Meilleure note (moyenne)",
@@ -85,6 +87,11 @@ export function Dashboard({
           break;
         case "surface_desc":
           sorted.sort((a, b) => (b.surface ?? -Infinity) - (a.surface ?? -Infinity));
+          break;
+        case "status":
+          sorted.sort(
+            (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status)
+          );
           break;
         default:
           sorted.sort(

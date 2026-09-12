@@ -46,10 +46,13 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
         <h3 className="font-semibold leading-snug line-clamp-2 group-hover:underline">
           {apartment.title}
           {apartment.status === "vu" && (
-            <span className="ml-1.5 font-bold text-green-600">VU</span>
+            <span className="ml-1.5 font-bold text-green-600">VISITE</span>
           )}
           {apartment.status === "planifie" && (
-            <span className="ml-1.5 font-bold text-orange-500">P</span>
+            <span className="ml-1.5 font-bold text-orange-500">PLANIFIE</span>
+          )}
+          {apartment.status === "rdv" && (
+            <span className="ml-1.5 font-bold text-red-600">RDV</span>
           )}
         </h3>
         <div className="flex items-baseline gap-2">

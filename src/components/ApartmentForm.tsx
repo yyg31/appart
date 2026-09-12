@@ -298,9 +298,9 @@ export function ApartmentForm({
               update("hasElevator", e.target.value as ApartmentFormValues["hasElevator"])
             }
           >
-            <option value="unknown">Inconnu</option>
             <option value="yes">Oui</option>
             <option value="no">Non</option>
+            <option value="unknown">NC</option>
           </select>
         </Field>
         <Field label="Cave">
@@ -311,8 +311,8 @@ export function ApartmentForm({
               update("hasCellar", e.target.value as ApartmentFormValues["hasCellar"])
             }
           >
-            <option value="unknown">Inconnue</option>
-            <option value="yes">Oui</option>
+            <option value="yes">Cave</option>
+            <option value="unknown">NC</option>
             <option value="no">Non</option>
           </select>
         </Field>

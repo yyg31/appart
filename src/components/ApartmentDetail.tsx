@@ -120,6 +120,12 @@ export function ApartmentDetail({
         <ImageGallery
           images={apartment.images}
           onAdd={(url) => patchField("images", [url])}
+          onRemove={(index) =>
+            patchField(
+              "images",
+              apartment.images.filter((_, i) => i !== index)
+            )
+          }
         />
 
         {apartment.url && (

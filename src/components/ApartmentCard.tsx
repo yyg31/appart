@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { ApartmentWithExtras } from "@/lib/types";
 import { formatDate, formatPrice, formatSurface, pricePerSquareMeter } from "@/lib/format";
 
 export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras }) {
+  const [coverBroken, setCoverBroken] = useState(false);
   const priceHasChanged =
     apartment.priceHistory.length > 1 &&
     apartment.priceHistory[0].price !==
@@ -14,11 +18,12 @@ export function ApartmentCard({ apartment }: { apartment: ApartmentWithExtras })
       className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:border-slate-300"
     >
       <div className="relative h-40 w-full bg-slate-100">
-        {apartment.images.length > 0 ? (
+        {apartment.images.length > 0 && !coverBroken ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={apartment.images[0]}
             alt=""
+            onError={() => setCoverBroken(true)}
             className="h-full w-full object-cover"
           />
         ) : (

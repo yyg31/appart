@@ -5,14 +5,32 @@ import { useState } from "react";
 export function ImageGallery({
   images,
   onAdd,
+  onRemove,
 }: {
   images: string[];
   onAdd?: (url: string) => Promise<void>;
+  onRemove?: (index: number) => Promise<void>;
 }) {
   const [active, setActive] = useState(0);
   const [adding, setAdding] = useState(false);
   const [url, setUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [broken, setBroken] = useState<Set<number>>(new Set());
+
+  const activeIndex = Math.min(active, Math.max(images.length - 1, 0));
+
+  async function handleRemove() {
+    if (!onRemove) return;
+    setRemoving(true);
+    try {
+      await onRemove(activeIndex);
+      setActive(0);
+      setBroken(new Set());
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   if (images.length === 0) {
     if (!onAdd) return null;
@@ -75,14 +93,36 @@ export function ImageGallery({
     );
   }
 
+  const activeIsBroken = broken.has(activeIndex);
+
   return (
     <div className="flex flex-col gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={images[active]}
-        alt=""
-        className="max-h-80 w-full rounded-lg object-cover"
-      />
+      <div className="relative">
+        {activeIsBroken ? (
+          <div className="flex h-80 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+            <span className="text-3xl">🚫</span>
+            <span className="text-sm font-medium">Photo indisponible</span>
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={images[activeIndex]}
+            alt=""
+            onError={() => setBroken((prev) => new Set(prev).add(activeIndex))}
+            className="max-h-80 w-full rounded-lg object-cover"
+          />
+        )}
+        {onRemove && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={removing}
+            className="absolute right-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white hover:bg-black/75 disabled:opacity-50"
+          >
+            {removing ? "..." : activeIsBroken ? "Retirer" : "✕ Retirer"}
+          </button>
+        )}
+      </div>
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto">
           {images.map((src, index) => (
@@ -90,12 +130,21 @@ export function ImageGallery({
               key={src + index}
               type="button"
               onClick={() => setActive(index)}
-              className={`shrink-0 overflow-hidden rounded-md border-2 ${
-                index === active ? "border-slate-900" : "border-transparent"
+              className={`flex h-16 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 bg-slate-50 ${
+                index === activeIndex ? "border-slate-900" : "border-transparent"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-16 w-20 object-cover" />
+              {broken.has(index) ? (
+                <span className="text-lg text-slate-300">🚫</span>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={src}
+                  alt=""
+                  onError={() => setBroken((prev) => new Set(prev).add(index))}
+                  className="h-full w-full object-cover"
+                />
+              )}
             </button>
           ))}
         </div>

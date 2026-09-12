@@ -10,7 +10,7 @@ import {
   type ApartmentFormValues,
 } from "@/components/ApartmentForm";
 import { ImageGallery } from "@/components/ImageGallery";
-import { InlineSelect, InlineText } from "@/components/InlineField";
+import { InlineSelect, InlineText, InlineTextarea } from "@/components/InlineField";
 import { PriceHistoryList } from "@/components/PriceHistoryList";
 import { RatingEditor } from "@/components/RatingEditor";
 import { formatDate, formatPrice, formatSurface } from "@/lib/format";
@@ -207,9 +207,11 @@ export function ApartmentDetail({
 
       <section className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="font-semibold">Bloc-notes</h2>
-        <p className="whitespace-pre-line text-sm text-slate-600">
-          {apartment.notes || "Aucune note pour l'instant."}
-        </p>
+        <InlineTextarea
+          value={apartment.notes}
+          placeholder="Vos impressions, questions à poser, points de vigilance..."
+          onSave={(v) => patchField("notes", v)}
+        />
       </section>
     </div>
   );

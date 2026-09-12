@@ -105,3 +105,55 @@ export function InlineText({
     </div>
   );
 }
+
+export function InlineTextarea({
+  label,
+  value,
+  placeholder,
+  onSave,
+}: {
+  label?: string;
+  value: string;
+  placeholder?: string;
+  onSave: (value: string) => Promise<void>;
+}) {
+  const [current, setCurrent] = useState(value);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await onSave(current);
+      setDirty(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {label && <div className={labelClass}>{label}</div>}
+      <textarea
+        value={current}
+        onChange={(e) => {
+          setCurrent(e.target.value);
+          setDirty(true);
+        }}
+        placeholder={placeholder}
+        rows={5}
+        className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      />
+      {dirty && (
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="self-start rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+        >
+          {saving ? "Enregistrement..." : "Enregistrer"}
+        </button>
+      )}
+    </div>
+  );
+}

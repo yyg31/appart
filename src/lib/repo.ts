@@ -24,6 +24,7 @@ interface ApartmentRow {
   floor: string | null;
   has_elevator: number | null;
   has_cellar: number | null;
+  has_parking: number | null;
   arrondissement: string | null;
   neighborhood: string | null;
   contact_phone: string | null;
@@ -49,6 +50,7 @@ function toApartment(row: ApartmentRow): Apartment {
     floor: row.floor,
     hasElevator: row.has_elevator === null ? null : Boolean(row.has_elevator),
     hasCellar: row.has_cellar === null ? null : Boolean(row.has_cellar),
+    hasParking: row.has_parking === null ? null : Boolean(row.has_parking),
     arrondissement: row.arrondissement,
     neighborhood: row.neighborhood,
     contactPhone: row.contact_phone,
@@ -126,6 +128,7 @@ export interface ApartmentInput {
   floor?: string | null;
   hasElevator?: boolean | null;
   hasCellar?: boolean | null;
+  hasParking?: boolean | null;
   arrondissement?: string | null;
   neighborhood?: string | null;
   contactPhone?: string | null;
@@ -148,10 +151,10 @@ export function createApartment(input: ApartmentInput): Apartment {
   db.prepare(
     `INSERT INTO apartments (
       id, url, source_site, title, description, image_url, price, surface, rooms,
-      floor, has_elevator, has_cellar, arrondissement, neighborhood, contact_phone,
+      floor, has_elevator, has_cellar, has_parking, arrondissement, neighborhood, contact_phone,
       visit_date, notes, status, listing_updated_at, created_at, updated_at
     ) VALUES (@id, @url, @sourceSite, @title, @description, @imageUrl, @price, @surface, @rooms,
-      @floor, @hasElevator, @hasCellar, @arrondissement, @neighborhood, @contactPhone,
+      @floor, @hasElevator, @hasCellar, @hasParking, @arrondissement, @neighborhood, @contactPhone,
       @visitDate, @notes, @status, @listingUpdatedAt, @createdAt, @updatedAt)`
   ).run({
     id,
@@ -166,6 +169,7 @@ export function createApartment(input: ApartmentInput): Apartment {
     floor: input.floor ?? null,
     hasElevator: boolToInt(input.hasElevator),
     hasCellar: boolToInt(input.hasCellar),
+    hasParking: boolToInt(input.hasParking),
     arrondissement: input.arrondissement ?? null,
     neighborhood: input.neighborhood ?? null,
     contactPhone: input.contactPhone ?? null,
@@ -288,6 +292,7 @@ const PATCHABLE_FIELDS: Partial<Record<keyof ApartmentPatch, string>> = {
   floor: "floor",
   hasElevator: "has_elevator",
   hasCellar: "has_cellar",
+  hasParking: "has_parking",
   arrondissement: "arrondissement",
   neighborhood: "neighborhood",
   contactPhone: "contact_phone",
@@ -313,7 +318,7 @@ export function updateApartment(
     const column = PATCHABLE_FIELDS[key];
     if (!column) continue;
     let value = patch[key];
-    if (key === "hasElevator" || key === "hasCellar") {
+    if (key === "hasElevator" || key === "hasCellar" || key === "hasParking") {
       value = boolToInt(value as boolean | null | undefined) as never;
     }
     columns.push(`${column} = ?`);

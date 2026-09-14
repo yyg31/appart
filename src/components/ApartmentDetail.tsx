@@ -200,6 +200,16 @@ export function ApartmentDetail({
             ]}
             onSave={(v) => patchField("hasCellar", v === "nc" ? null : v === "yes")}
           />
+          <InlineSelect
+            label="Parking"
+            value={apartment.hasParking === null ? "nc" : apartment.hasParking ? "yes" : "no"}
+            options={[
+              { value: "yes", label: "Oui" },
+              { value: "no", label: "Non" },
+              { value: "nc", label: "NC" },
+            ]}
+            onSave={(v) => patchField("hasParking", v === "nc" ? null : v === "yes")}
+          />
           <Info label="Arrondissement" value={apartment.arrondissement ?? "—"} />
           <Info label="Quartier" value={apartment.neighborhood ?? "—"} />
           <Info

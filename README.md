@@ -39,19 +39,29 @@ npm run start
 
 ## Docker
 
-L'app + Caddy (HTTPS et mot de passe) peuvent tourner entièrement via Docker Compose.
+L'app + Caddy (HTTPS) peuvent tourner entièrement via Docker Compose.
 
-1. Copiez `Caddyfile.example` vers `Caddyfile` et remplacez le domaine et le hash du mot de passe :
+1. Copiez `Caddyfile.example` vers `Caddyfile` et remplacez le domaine :
    ```bash
    cp Caddyfile.example Caddyfile
-   docker compose run --rm caddy caddy hash-password --plaintext 'VotreMotDePasse'
    ```
+   (le mot de passe est optionnel — voir les instructions commentées dans le fichier pour l'activer)
 2. Lancez :
    ```bash
    docker compose up -d --build
    ```
 
-Les données (`data/appart.db`, `data/uploads/`) sont montées depuis le dossier `data/` du projet, donc persistantes entre les redéploiements. Le vrai `Caddyfile` (avec le hash du mot de passe) n'est jamais commité — voir `.gitignore`.
+Les données (`data/appart.db`, `data/uploads/`) sont montées depuis le dossier `data/` du projet, donc persistantes entre les redéploiements. Le vrai `Caddyfile` (s'il contient un mot de passe) n'est jamais commité — voir `.gitignore`.
+
+## Sauvegardes et mises à jour
+
+- **Sauvegarder maintenant** : `bash scripts/backup.sh` — archive `data/appart.db` et `data/uploads/` dans `../appart-backups/` (en dehors du projet), et garde les 14 dernières.
+- **Mettre à jour l'app** : `bash scripts/update.sh` — sauvegarde automatiquement, puis `git pull` et reconstruit les conteneurs.
+- **Restaurer une sauvegarde** : `bash scripts/restore.sh` (restaure la plus récente) ou `bash scripts/restore.sh chemin/vers/appart-backup-XXXX.tar.gz`.
+- **Sauvegarde automatique quotidienne** (recommandé) : ajoutez au crontab (`crontab -e`) :
+  ```
+  0 4 * * * cd ~/appart && bash scripts/backup.sh >> ~/appart-backups/backup.log 2>&1
+  ```
 
 ## Notes
 

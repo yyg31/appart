@@ -42,6 +42,9 @@ yarn-error.log*
 # user-uploaded photos
 /data/uploads/
 
+# real Caddy config (contains the basic_auth password hash) — see Caddyfile.example
+/Caddyfile
+
 # vercel
 .vercel
 

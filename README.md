@@ -37,6 +37,22 @@ npm run build
 npm run start
 ```
 
+## Docker
+
+L'app + Caddy (HTTPS et mot de passe) peuvent tourner entièrement via Docker Compose.
+
+1. Copiez `Caddyfile.example` vers `Caddyfile` et remplacez le domaine et le hash du mot de passe :
+   ```bash
+   cp Caddyfile.example Caddyfile
+   docker compose run --rm caddy caddy hash-password --plaintext 'VotreMotDePasse'
+   ```
+2. Lancez :
+   ```bash
+   docker compose up -d --build
+   ```
+
+Les données (`data/appart.db`, `data/uploads/`) sont montées depuis le dossier `data/` du projet, donc persistantes entre les redéploiements. Le vrai `Caddyfile` (avec le hash du mot de passe) n'est jamais commité — voir `.gitignore`.
+
 ## Notes
 
 - L'extraction automatique depuis une URL dépend de la structure de la page du site source (balises Open Graph / JSON-LD) ; certains sites bloquent les requêtes automatisées, auquel cas les champs restent à compléter manuellement.

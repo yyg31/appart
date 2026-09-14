@@ -46,6 +46,9 @@ export default function NewApartmentPage() {
         price: data.price?.toString() ?? "",
         surface: data.surface?.toString() ?? "",
         rooms: data.rooms?.toString() ?? "",
+        floor: data.floor ?? "",
+        hasElevator: data.hasElevator === true ? "yes" : data.hasElevator === false ? "no" : "unknown",
+        hasCellar: data.hasCellar === true ? "yes" : data.hasCellar === false ? "no" : "unknown",
       });
     } catch {
       setScrapeError("Impossible d'analyser cette URL. Remplissez les champs manuellement.");

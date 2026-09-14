@@ -31,6 +31,40 @@ function parseRoomsFromText(text: string): number | null {
   return null;
 }
 
+function parseElevatorFromText(text: string): boolean | null {
+  if (/\bsans\s+ascenseur\b|\bpas\s+d['’ ]ascenseur\b|\baucun\s+ascenseur\b/i.test(text)) {
+    return false;
+  }
+  if (/\bascenseur\b/i.test(text)) return true;
+  return null;
+}
+
+function parseCellarFromText(text: string): boolean | null {
+  if (/\bsans\s+caves?\b|\bpas\s+de\s+caves?\b/i.test(text)) return false;
+  if (/\bcaves?\b/i.test(text)) return true;
+  return null;
+}
+
+function formatFloorNumber(digits: string): string {
+  return digits === "1" ? "1er" : `${digits}e`;
+}
+
+function parseFloorFromText(text: string): string | null {
+  if (/\brez[\s-]de[\s-]cha?u?ss[ée]e\b|\bRDC\b/i.test(text)) return "RDC";
+
+  const patterns = [
+    /(\d{1,2})\s?(?:er|ère|ème|eme|e)\s+et\s+dernier\s+étage/i,
+    /(\d{1,2})\s?(?:er|ère|ème|eme|e)\s+étage/i,
+    /étage\s*:?\s*(\d{1,2})\b/i,
+    /\bau\s+(\d{1,2})\s?(?:er|ère|ème|eme|e)\b/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return formatFloorNumber(match[1]);
+  }
+  return null;
+}
+
 function findImagesInJsonLd(json: unknown): string[] {
   const found: string[] = [];
   const visit = (node: unknown) => {
@@ -106,6 +140,11 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
       },
     });
     if (!response.ok) {
@@ -118,6 +157,9 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
         price: null,
         surface: null,
         rooms: null,
+        floor: null,
+        hasElevator: null,
+        hasCellar: null,
         warning: `Le site a répondu avec le code ${response.status}. Remplissez les champs manuellement.`,
       };
     }
@@ -132,6 +174,9 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
       price: null,
       surface: null,
       rooms: null,
+      floor: null,
+      hasElevator: null,
+      hasCellar: null,
       warning:
         error instanceof Error && error.name === "AbortError"
           ? "Le site a mis trop de temps à répondre. Remplissez les champs manuellement."
@@ -209,10 +254,19 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     }
   });
 
+  $("script, style, noscript").remove();
+  const bodyText = $("body").text().replace(/\s+/g, " ").trim().slice(0, 20_000);
+
   const fallbackText = `${title ?? ""} ${description ?? ""}`;
-  if (price === null) price = parsePriceFromText(fallbackText);
-  if (surface === null) surface = parseSurfaceFromText(fallbackText);
-  if (rooms === null) rooms = parseRoomsFromText(fallbackText);
+  if (price === null) price = parsePriceFromText(fallbackText) ?? parsePriceFromText(bodyText);
+  if (surface === null)
+    surface = parseSurfaceFromText(fallbackText) ?? parseSurfaceFromText(bodyText);
+  if (rooms === null) rooms = parseRoomsFromText(fallbackText) ?? parseRoomsFromText(bodyText);
+
+  const combinedText = `${fallbackText} ${bodyText}`;
+  const hasElevator = parseElevatorFromText(combinedText);
+  const hasCellar = parseCellarFromText(combinedText);
+  const floor = parseFloorFromText(combinedText);
 
   const images = Array.from(new Set([...metaImages, ...jsonLdImages])).slice(0, 20);
 
@@ -227,6 +281,9 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     price,
     surface,
     rooms,
+    floor,
+    hasElevator,
+    hasCellar,
     warning: foundSomething
       ? null
       : "Peu d'informations ont pu être extraites automatiquement. Vérifiez et complétez les champs.",

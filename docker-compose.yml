@@ -6,6 +6,9 @@ services:
       - ./data:/app/data
     expose:
       - "3000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   caddy:
     image: caddy:2
@@ -19,6 +22,9 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 volumes:
   caddy_data:

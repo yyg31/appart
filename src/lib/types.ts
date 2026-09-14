@@ -69,5 +69,8 @@ export interface ScrapedListing {
   price: number | null;
   surface: number | null;
   rooms: number | null;
+  floor: string | null;
+  hasElevator: boolean | null;
+  hasCellar: boolean | null;
   warning: string | null;
 }

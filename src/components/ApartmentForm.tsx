@@ -14,6 +14,7 @@ export interface ApartmentFormValues {
   floor: string;
   hasElevator: "unknown" | "yes" | "no";
   hasCellar: "unknown" | "yes" | "no";
+  hasParking: "unknown" | "yes" | "no";
   arrondissement: string;
   neighborhood: string;
   contactPhone: string;
@@ -34,6 +35,7 @@ export const EMPTY_FORM_VALUES: ApartmentFormValues = {
   floor: "",
   hasElevator: "unknown",
   hasCellar: "unknown",
+  hasParking: "unknown",
   arrondissement: "",
   neighborhood: "",
   contactPhone: "",
@@ -60,6 +62,7 @@ export function apartmentToFormValues(apartment: {
   floor: string | null;
   hasElevator: boolean | null;
   hasCellar: boolean | null;
+  hasParking: boolean | null;
   arrondissement: string | null;
   neighborhood: string | null;
   contactPhone: string | null;
@@ -79,6 +82,7 @@ export function apartmentToFormValues(apartment: {
     floor: apartment.floor ?? "",
     hasElevator: triState(apartment.hasElevator),
     hasCellar: triState(apartment.hasCellar),
+    hasParking: triState(apartment.hasParking),
     arrondissement: apartment.arrondissement ?? "",
     neighborhood: apartment.neighborhood ?? "",
     contactPhone: apartment.contactPhone ?? "",
@@ -101,6 +105,7 @@ export function formValuesToPayload(values: ApartmentFormValues) {
     floor: values.floor.trim() || null,
     hasElevator: values.hasElevator === "unknown" ? null : values.hasElevator === "yes",
     hasCellar: values.hasCellar === "unknown" ? null : values.hasCellar === "yes",
+    hasParking: values.hasParking === "unknown" ? null : values.hasParking === "yes",
     arrondissement: values.arrondissement.trim() || null,
     neighborhood: values.neighborhood.trim() || null,
     contactPhone: values.contactPhone.trim() || null,
@@ -344,6 +349,19 @@ export function ApartmentForm({
             <option value="yes">Cave</option>
             <option value="unknown">NC</option>
             <option value="no">Non</option>
+          </select>
+        </Field>
+        <Field label="Parking">
+          <select
+            className={inputClass}
+            value={values.hasParking}
+            onChange={(e) =>
+              update("hasParking", e.target.value as ApartmentFormValues["hasParking"])
+            }
+          >
+            <option value="yes">Oui</option>
+            <option value="no">Non</option>
+            <option value="unknown">NC</option>
           </select>
         </Field>
         <Field label="Arrondissement">

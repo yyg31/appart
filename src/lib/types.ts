@@ -42,6 +42,7 @@ export interface Apartment {
   floor: string | null;
   hasElevator: boolean | null;
   hasCellar: boolean | null;
+  hasParking: boolean | null;
   arrondissement: string | null;
   neighborhood: string | null;
   contactPhone: string | null;
@@ -72,5 +73,6 @@ export interface ScrapedListing {
   floor: string | null;
   hasElevator: boolean | null;
   hasCellar: boolean | null;
+  hasParking: boolean | null;
   warning: string | null;
 }

@@ -74,6 +74,13 @@ function createConnection() {
       ON apartment_images(apartment_id, position);
   `);
 
+  const apartmentColumns = db
+    .prepare("PRAGMA table_info(apartments)")
+    .all() as { name: string }[];
+  if (!apartmentColumns.some((c) => c.name === "has_parking")) {
+    db.exec("ALTER TABLE apartments ADD COLUMN has_parking INTEGER");
+  }
+
   const personCount = db
     .prepare("SELECT COUNT(*) AS count FROM persons")
     .get() as { count: number };

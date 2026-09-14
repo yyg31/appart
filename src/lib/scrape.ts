@@ -45,6 +45,12 @@ function parseCellarFromText(text: string): boolean | null {
   return null;
 }
 
+function parseParkingFromText(text: string): boolean | null {
+  if (/\bsans\s+parking\b|\bpas\s+de\s+parking\b/i.test(text)) return false;
+  if (/\bparking\b|\bplace\s+de\s+parking\b/i.test(text)) return true;
+  return null;
+}
+
 function formatFloorNumber(digits: string): string {
   return digits === "1" ? "1er" : `${digits}e`;
 }
@@ -160,6 +166,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
         floor: null,
         hasElevator: null,
         hasCellar: null,
+        hasParking: null,
         warning: `Le site a répondu avec le code ${response.status}. Remplissez les champs manuellement.`,
       };
     }
@@ -177,6 +184,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
       floor: null,
       hasElevator: null,
       hasCellar: null,
+      hasParking: null,
       warning:
         error instanceof Error && error.name === "AbortError"
           ? "Le site a mis trop de temps à répondre. Remplissez les champs manuellement."
@@ -266,6 +274,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
   const combinedText = `${fallbackText} ${bodyText}`;
   const hasElevator = parseElevatorFromText(combinedText);
   const hasCellar = parseCellarFromText(combinedText);
+  const hasParking = parseParkingFromText(combinedText);
   const floor = parseFloorFromText(combinedText);
 
   const images = Array.from(new Set([...metaImages, ...jsonLdImages])).slice(0, 20);
@@ -284,6 +293,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     floor,
     hasElevator,
     hasCellar,
+    hasParking,
     warning: foundSomething
       ? null
       : "Peu d'informations ont pu être extraites automatiquement. Vérifiez et complétez les champs.",

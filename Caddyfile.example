@@ -1,12 +1,15 @@
 # Copiez ce fichier vers ./Caddyfile (à côté de docker-compose.yml) et
-# adaptez le domaine + le hash du mot de passe. Ne committez jamais le
-# vrai Caddyfile (il contient le hash de votre mot de passe).
-#
-# Générer un hash : docker run --rm caddy:2 caddy hash-password --plaintext 'VotreMotDePasse'
+# adaptez le domaine. Ne committez jamais le vrai Caddyfile s'il contient
+# un mot de passe (voir .gitignore).
 
 votre-domaine-ou-ip.nip.io {
-    basic_auth {
-        couple LE_HASH_ICI
-    }
     reverse_proxy app:3000
 }
+
+# Pour protéger l'accès par mot de passe, décommentez ce bloc dans le
+# fichier ci-dessus (juste avant reverse_proxy) et générez un hash avec :
+#   docker run --rm caddy:2 caddy hash-password --plaintext 'VotreMotDePasse'
+#
+#   basic_auth {
+#       couple LE_HASH_ICI
+#   }

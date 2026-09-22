@@ -5,13 +5,22 @@ const FETCH_TIMEOUT_MS = 12_000;
 
 function parsePriceFromText(text: string): number | null {
   // Matches "350 000 €", "350000€", "€350,000", "350.000 €", etc.
-  const match = text.match(
-    /(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s?(?:€|EUR)/i
-  );
-  if (!match) return null;
-  const digits = match[1].replace(/[ .,]/g, "");
-  const value = parseInt(digits, 10);
-  return Number.isFinite(value) ? value : null;
+  // Skips amounts immediately followed by "/m²" (price per square meter),
+  // which should never be mistaken for the total price.
+  const pattern = /(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s?(?:€|EUR)(\s?\/?\s?m(?:2|²))?/gi;
+  let match: RegExpExecArray | null;
+  let perSquareMeterFallback: number | null = null;
+  while ((match = pattern.exec(text)) !== null) {
+    const digits = match[1].replace(/[ .,]/g, "");
+    const value = parseInt(digits, 10);
+    if (!Number.isFinite(value)) continue;
+    if (match[2]) {
+      if (perSquareMeterFallback === null) perSquareMeterFallback = value;
+      continue;
+    }
+    return value;
+  }
+  return perSquareMeterFallback;
 }
 
 function parseSurfaceFromText(text: string): number | null {
@@ -162,26 +171,6 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     throw new Error("URL invalide");
   }
 
-  if (hostname === "jinka.fr" || hostname.endsWith(".jinka.fr")) {
-    return {
-      url,
-      sourceSite: hostname,
-      title: null,
-      description: null,
-      images: [],
-      price: null,
-      surface: null,
-      rooms: null,
-      floor: null,
-      hasElevator: null,
-      hasCellar: null,
-      hasParking: null,
-      arrondissement: null,
-      warning:
-        "Jinka nécessite une connexion pour afficher les vraies informations de l'annonce, l'extraction automatique n'est pas fiable sur ce site. Remplissez les champs manuellement, ou utilisez si possible le lien de l'annonce originale (site de l'agence).",
-    };
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -318,7 +307,11 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
   const bodyText = $("body").text().replace(/\s+/g, " ").trim().slice(0, 20_000);
 
   const fallbackText = `${title ?? ""} ${description ?? ""}`;
-  if (price === null) price = parsePriceFromText(fallbackText) ?? parsePriceFromText(bodyText);
+  // Le texte affiché sur la page est plus fiable que les données structurées
+  // (JSON-LD) : sur les sites agrégateurs (ex. Jinka), la structured data peut
+  // contenir le prix d'une annonce "similaire" affichée sur la même page.
+  const textPrice = parsePriceFromText(fallbackText) ?? parsePriceFromText(bodyText);
+  price = textPrice ?? price;
   if (surface === null)
     surface = parseSurfaceFromText(fallbackText) ?? parseSurfaceFromText(bodyText);
   if (rooms === null) rooms = parseRoomsFromText(fallbackText) ?? parseRoomsFromText(bodyText);

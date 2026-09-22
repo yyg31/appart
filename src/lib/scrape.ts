@@ -51,6 +51,36 @@ function parseParkingFromText(text: string): boolean | null {
   return null;
 }
 
+function formatArrondissement(digits: string): string | null {
+  const n = parseInt(digits, 10);
+  if (!Number.isFinite(n) || n < 1 || n > 20) return null;
+  return n === 1 ? "1er" : `${n}e`;
+}
+
+function parseArrondissementFromText(text: string): string | null {
+  const postalMatch = text.match(/\b75(0[1-9]|1[0-9]|20)\b/);
+  if (postalMatch) {
+    const formatted = formatArrondissement(postalMatch[1]);
+    if (formatted) return formatted;
+  }
+  const arrMatch = text.match(/(\d{1,2})\s?(?:er|ère|ème|eme|e)\s+arrondissement/i);
+  if (arrMatch) {
+    const formatted = formatArrondissement(arrMatch[1]);
+    if (formatted) return formatted;
+  }
+  const parenMatch = text.match(/\((\d{1,2})\s?(?:er|ère|ème|eme|e)\)/i);
+  if (parenMatch) {
+    const formatted = formatArrondissement(parenMatch[1]);
+    if (formatted) return formatted;
+  }
+  const parisMatch = text.match(/\bParis\s+(\d{1,2})\s?(?:er|ère|ème|eme|e)\b/i);
+  if (parisMatch) {
+    const formatted = formatArrondissement(parisMatch[1]);
+    if (formatted) return formatted;
+  }
+  return null;
+}
+
 function formatFloorNumber(digits: string): string {
   return digits === "1" ? "1er" : `${digits}e`;
 }
@@ -132,6 +162,26 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     throw new Error("URL invalide");
   }
 
+  if (hostname === "jinka.fr" || hostname.endsWith(".jinka.fr")) {
+    return {
+      url,
+      sourceSite: hostname,
+      title: null,
+      description: null,
+      images: [],
+      price: null,
+      surface: null,
+      rooms: null,
+      floor: null,
+      hasElevator: null,
+      hasCellar: null,
+      hasParking: null,
+      arrondissement: null,
+      warning:
+        "Jinka nécessite une connexion pour afficher les vraies informations de l'annonce, l'extraction automatique n'est pas fiable sur ce site. Remplissez les champs manuellement, ou utilisez si possible le lien de l'annonce originale (site de l'agence).",
+    };
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -167,6 +217,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
         hasElevator: null,
         hasCellar: null,
         hasParking: null,
+        arrondissement: null,
         warning: `Le site a répondu avec le code ${response.status}. Remplissez les champs manuellement.`,
       };
     }
@@ -185,6 +236,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
       hasElevator: null,
       hasCellar: null,
       hasParking: null,
+      arrondissement: null,
       warning:
         error instanceof Error && error.name === "AbortError"
           ? "Le site a mis trop de temps à répondre. Remplissez les champs manuellement."
@@ -276,6 +328,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
   const hasCellar = parseCellarFromText(combinedText);
   const hasParking = parseParkingFromText(combinedText);
   const floor = parseFloorFromText(combinedText);
+  const arrondissement = parseArrondissementFromText(combinedText);
 
   const images = Array.from(new Set([...metaImages, ...jsonLdImages])).slice(0, 20);
 
@@ -294,6 +347,7 @@ export async function scrapeListing(url: string): Promise<ScrapedListing> {
     hasElevator,
     hasCellar,
     hasParking,
+    arrondissement,
     warning: foundSomething
       ? null
       : "Peu d'informations ont pu être extraites automatiquement. Vérifiez et complétez les champs.",

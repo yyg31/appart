@@ -74,5 +74,6 @@ export interface ScrapedListing {
   hasElevator: boolean | null;
   hasCellar: boolean | null;
   hasParking: boolean | null;
+  arrondissement: string | null;
   warning: string | null;
 }

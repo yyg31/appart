@@ -1,13 +1,14 @@
-export type ApartmentStatus = "peut_etre" | "planifie" | "rdv" | "vu";
+export type ApartmentStatus = "peut_etre" | "planifie" | "rdv" | "vu" | "vendu";
 
 export const STATUS_LABELS: Record<ApartmentStatus, string> = {
   vu: "Vu",
   planifie: "Planifié",
   rdv: "RDV",
   peut_etre: "Peut-être",
+  vendu: "Vendu",
 };
 
-export const STATUS_ORDER: ApartmentStatus[] = ["vu", "planifie", "rdv", "peut_etre"];
+export const STATUS_ORDER: ApartmentStatus[] = ["vu", "planifie", "rdv", "peut_etre", "vendu"];
 
 export interface Person {
   id: number;

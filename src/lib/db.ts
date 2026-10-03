@@ -111,7 +111,7 @@ function createConnection() {
   // vocabulary (or any unrecognized value) to the new default.
   db.exec(`
     UPDATE apartments SET status = 'peut_etre'
-    WHERE status NOT IN ('peut_etre', 'planifie', 'rdv', 'vu')
+    WHERE status NOT IN ('peut_etre', 'planifie', 'rdv', 'vu', 'vendu')
   `);
 
   return db;

@@ -72,6 +72,11 @@ export function ApartmentCard({
           {apartment.status === "rdv" && (
             <span className="ml-1.5 font-bold text-red-600">RDV</span>
           )}
+          {apartment.status === "vendu" && (
+            <span className="ml-1.5 rounded bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">
+              VENDU
+            </span>
+          )}
         </h3>
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-bold">{formatPrice(apartment.price)}</span>
